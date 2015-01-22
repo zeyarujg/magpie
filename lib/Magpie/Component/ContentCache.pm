@@ -28,6 +28,10 @@ sub cache_content {
 
     my $cached = $cache->get($uri) || {};
     $cached->{content} = $content;
+    $cached->{content_type} = $self->response->content_type;
+    $cached->{content_length} = $self->response->content_length;
+    $cached->{last_modified} = $self->response->header('Last-Modified');   
+
     $cache->set($uri, $cached);
     return OK;
 }

@@ -37,6 +37,30 @@ sub mtime {
     return scalar @stat ? $stat[9] : -1;
 }
 
+sub content_type {
+    my $self = shift;
+
+    return $self->{CONTENT_TYPE} if $self->{CONTENT_TYPE};
+
+    my $content_type = Plack::MIME->mime_type( $self->absolute_path ) || 'text/plain';
+ 
+    # this is consistent /w PAF's default
+    if ($content_type =~ m!^text/!) {
+        $content_type .= '; charset=UTF-8';
+    }
+
+    return $content_type;
+}
+
+sub content_length {
+    my $self = shift;
+
+    return $self->{CONTENT_LENGTH} if $self->{CONTENT_LENGTH};
+
+    my @stat = stat(shift->absolute_path);
+    return scalar @stat ? $stat[7] : 0;
+}
+
 sub GET {
     my $self = shift;
     my $ctxt = shift;
@@ -44,7 +68,11 @@ sub GET {
     my $paf = Plack::App::File->new(root => $self->root);
     my $r = $paf->call($self->request->env);
 
+    my %hds = @{$r->[1]};
+
     unless ( $r->[0] == 200 ) {
+        use Data::Printer;
+        warn "M:R:F:GET Error: " . p( $r );
         $self->set_error({
             status_code => $r->[0],
             additional_headers => $r->[1],
@@ -52,6 +80,10 @@ sub GET {
         });
     }
     $self->parent_handler->resource($self);
+    $self->{CONTENT_TYPE} = $hds{'Content-Type'};
+    $self->{LAST_MODIFIED} = $hds{'Last-Modified'};
+    $self->{CONTENT_LENGTH} = $hds{'Content-Length'};     
+
     $self->data( $r->[2] );
 
     return OK;

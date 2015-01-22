@@ -16,18 +16,24 @@ around 'GET' => sub {
     my $orig = shift;
     my $self = shift;
     my $mtime = $self->mtime;
+    my $content_type = $self->content_type;
     my $uri = $self->request->uri->as_string;
 
     if ( $mtime && $mtime > 0 ) {
         my $data = $self->cache->get($uri);
+        #use Data::Printer;
+        #warn "Cached: $uri\n\n" . p($data);
         if ($data && defined $data->{resource} && defined defined $data->{resource}->{mtime} && $mtime == $data->{resource}->{mtime}) {
             my $content = $data->{content};
             $self->data($content);
+            $self->response->content_type( $data->{content_type} );
+            $self->response->content_length( $data->{content_length} );
+            $self->response->header( 'Content-Type', $data->{content_type} );
             return DONE;
         }
         else {
             # actual content will be added at the end of the pipeline process
-            my $data = { content => '', resource => { mtime => $mtime,}};
+            my $data = { content => '', resource => { mtime => $mtime, }};
             $self->cache->set($uri, $data);
             $self->parent_handler->add_handler('Magpie::Component::ContentCache');
         }
