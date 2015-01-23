@@ -79,10 +79,22 @@ sub absolute_path {
     my $self = shift;
     my $path = shift;
     my $docroot = $self->document_root;
-    unless ($path =~ m|^\Q$docroot\E|) {
-        $docroot .= '/' unless $docroot =~ m|/$| || $path =~ m|^/|;
-        $path = $docroot . $path;
+    $docroot =~ s|/$||;
+    my $r_path;
+
+    if ($path =~ m|^/|) {
+        # add docroot if missing
+        unless ($path =~ m|^\Q$docroot\E|) {
+            $path = $docroot . $path;
+        }
     }
+    # relative paths
+    else {
+        $r_path = $self->request->path_info;
+        $r_path =~ s|[^/]*$||; # strip filename
+        $path = $docroot . $r_path . $path;
+    }
+    
     return $path;
 }
 
