@@ -69,10 +69,9 @@ sub GET {
     my $r = $paf->call($self->request->env);
 
     my %hds = @{$r->[1]};
-
+   
     unless ( $r->[0] == 200 ) {
         use Data::Printer;
-        warn "M:R:F:GET Error: " . p( $r );
         $self->set_error({
             status_code => $r->[0],
             additional_headers => $r->[1],
@@ -80,12 +79,12 @@ sub GET {
         });
     }
     $self->parent_handler->resource($self);
-    $self->{CONTENT_TYPE} = $hds{'Content-Type'};
-    $self->{LAST_MODIFIED} = $hds{'Last-Modified'};
-    $self->{CONTENT_LENGTH} = $hds{'Content-Length'};     
-
+    $self->response->header('Last-Modified', 
+                            $self->{LAST_MODIFIED} = $hds{'Last-Modified'} );
+    $self->response->content_type( $self->{CONTENT_TYPE} = $hds{'Content-Type'} );
+    $self->response->content_length( $self->{CONTENT_LENGTH} = $hds{'Content-Length'} ); 
     $self->data( $r->[2] );
-
+    
     return OK;
 }
 
