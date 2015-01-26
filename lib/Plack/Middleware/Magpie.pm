@@ -271,11 +271,18 @@ sub call {
         #if (!utf8::is_utf8($data)) {
         #    $data = decode('UTF-8', $data);
         #}
-        my $content_length = length $data || 0;
+       
+        # Ad "length $data": This might be an IO::Handle,
+        # length 'Plack::Util::IOWithPath=GLOB(0x1234567)' is always 39 and
+        # Apache is going to send you exactly these first 39 bytes out of it.
+        # Use Content-Length set upstream if we have it.
+        my $content_length =  $m->response->content_length 
+                           || Plack::Util::content_length($data) 
+                           || 0;
         if ($content_length) {
             $m->response->content_length($content_length);
             $m->plack_response->body($data);
-        }
+        }   
     }
 
     return $m->plack_response->finalize;
