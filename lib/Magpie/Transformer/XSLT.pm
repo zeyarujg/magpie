@@ -199,6 +199,20 @@ sub get_content {
     return OK;
 }
 
+sub mtime {
+    my $self = shift;
+    my $mtime = $self->resource->mtime;
+    my $deps = $self->resource->dependencies;
+    my $dmtime;
+
+    foreach (keys %{$deps}) {
+        next unless $dmtime = $deps->{$_}->{mtime};
+        $mtime = $dmtime if $dmtime > $mtime;
+    }
+
+    return $mtime;
+}
+
 sub transform {
     my $self = shift;
     my $ctxt = shift;
@@ -225,8 +239,8 @@ sub transform {
         my $fh = IO::File->new($file_path) || die "Error opening file $uri ($file_path)";
         my @stat = stat($file_path);
         my $mtime = @stat ? $stat[9] : -1;
-        # mtime + size, for Etags
-        $self->resource->add_dependency($file_path => { mtime => $mtime, size => $stat[7]});
+        # mtime + size, for Etags 
+        $self->resource->add_dependency($file_path => { mtime => $mtime, size => $stat[7], });
         local $/ = undef;
         my $data = <$fh>;
         return \$data;
@@ -272,12 +286,15 @@ sub transform {
     };
 
     return OK if $self->has_error;
-
+    
     my $new_body     = $style->output_as_bytes( $result );
     my $content_type = $style->media_type;
-    my $encoding     = $style->output_encoding;
+    my $encoding     = $style->output_encoding || "UTF-8";
+    my $last_modified = HTTP::Date::time2str( $self->mtime );
+
     $self->response->content_type("$content_type; charset=$encoding");
     $self->response->content_length( length($new_body) );
+    $self->response->header('Last-Modified' => $last_modified);
     $self->resource->data( $new_body );
 
     return OK;

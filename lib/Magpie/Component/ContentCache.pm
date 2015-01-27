@@ -28,7 +28,9 @@ sub cache_content {
 
     my $cached = $cache->get($uri) || {};
     $cached->{content} = $content;
-    $cached->{content_type} = $self->response->content_type;
+    
+    # reading from response->content_type strips the 'encoding=' part?    
+    $cached->{content_type} = $self->response->header('Content-Type');   
     $cached->{content_length} = $self->response->content_length;
     $cached->{last_modified} = $self->response->header('Last-Modified');   
 
