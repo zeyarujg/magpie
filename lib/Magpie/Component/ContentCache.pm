@@ -18,9 +18,14 @@ sub cache_content {
     my $content = undef;
     my $uri = $self->request->uri->as_string;
     my $cache = $self->resource->cache;
-
+    
     if ($self->resource->has_data) {
-        $content = $self->resource->data;
+        if ( Scalar::Util::blessed($self->resource->data) ) {
+            Plack::Util::foreach($self->resource->data, sub { $content .= @_ });
+        }
+        else {
+            $content = $self->resource->data;
+        }
     }
     else {
         $content = $self->response->body;
