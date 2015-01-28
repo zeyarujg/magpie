@@ -32,10 +32,9 @@ around 'GET' => sub {
     my $content_type = $self->content_type;
     my $uri = $self->request->uri->as_string;
 
-    if ( $mtime && $mtime > 0 ) {
+    if ( $mtime && $mtime > 0 
+                && $self->request->header('Cache-Control') !~ /no-cache/i) { # e.g. C-F5 reload
         my $data = $self->cache->get($uri);
-        #use Data::Printer;
-        #warn "Cached: $uri\n\n" . p($data);
         if ($data && defined $data->{resource} 
                   && defined defined $data->{resource}->{mtime} 
                   && $mtime == $data->{resource}->{mtime} 
