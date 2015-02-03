@@ -24,21 +24,25 @@ sub stale {
     }
     return 0;
 }
-    
-around 'GET' => sub {
-    my $orig = shift;
-    my $self = shift;
-    my $mtime = $self->mtime;
-    my $content_type = $self->content_type;
-    my $uri = $self->request->uri->as_string;
 
-    if ( $mtime && $mtime > 0 
-                && $self->request->header('Cache-Control') !~ /no-cache/i) { # e.g. C-F5 reload
-        my $data = $self->cache->get($uri);
-        if ($data && defined $data->{resource} 
-                  && defined defined $data->{resource}->{mtime} 
-                  && $mtime == $data->{resource}->{mtime} 
-                  && !stale( $data->{resource}->{dependencies} ) ) {
+around 'GET' => sub {
+    my $orig         = shift;
+    my $self         = shift;
+    my $mtime        = $self->mtime;
+    my $content_type = $self->content_type;
+    my $uri          = $self->request->uri->as_string;
+
+    if ( $mtime && $mtime > 0 ) {
+        my $data;
+        my $no_cache = $self->request->header('Cache-Control')
+                   and $self->request->header('Cache-Control') =~ m/no-cache/i;
+        if ( not $no_cache # e.g. C-F5 reload
+             and $data   = $self->cache->get($uri)
+             and defined   $data->{resource}
+             and defined   $data->{resource}->{mtime}
+             and $mtime == $data->{resource}->{mtime}
+             and not stale($data->{resource}->{dependencies}) )
+        {
             warn "Serving cached '$uri'\n";
             my $content = $data->{content};
             $self->data($content);
@@ -51,7 +55,7 @@ around 'GET' => sub {
         else {
             warn "Set cache '$uri'\n";
             # actual content will be added at the end of the pipeline process
-            my $data = { content => '', resource => { mtime => $mtime, }};
+            $data = { content => '', resource => { mtime => $mtime, } };
             $self->cache->set($uri, $data);
             $self->parent_handler->add_handler('Magpie::Component::ContentCache');
             $self->response->header( 'X-Magpie-Cache-Hit' => 'Nay!' );
