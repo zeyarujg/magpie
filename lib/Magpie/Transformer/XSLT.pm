@@ -94,7 +94,7 @@ sub absolute_path {
         $r_path =~ s|[^/]*$||; # strip filename
         $path = $docroot . $r_path . $path;
     }
-    
+
     return $path;
 }
 
@@ -107,7 +107,14 @@ sub get_content {
     my $ctxt = shift;
     my $dom = undef;
 
-    my $xml_parser = XML::LibXML->new( expand_xinclude => 1, huge => 1, debug => 1, recover => 1, no_xinclude_nodes => 1, no_basefix => 1 );
+    my $xml_parser = XML::LibXML->new(
+        expand_xinclude   => 1,
+        huge              => 1,
+        debug             => 1,
+        recover           => 1,
+        no_xinclude_nodes => 1,
+        no_basefix        => 1
+    );
 
     my $docroot  = $self->document_root;
     my $resource = $self->resource;
@@ -125,7 +132,7 @@ sub get_content {
             $resource->add_dependency($uri->path => { mtime => $mtime, size => $stat[7]});
         }
         # don't handle URI's supported by libxml
-        return 0 if $uri_string =~ /^(https?|ftp|file):/;
+        return 0 if $uri_string =~ /^(https?|ftp|file|about):/;
         return 0 if $docroot && $uri_string =~ m|^\Q$docroot\E|;
         return 1;
     };
@@ -239,7 +246,7 @@ sub transform {
         my $fh = IO::File->new($file_path) || die "Error opening file $uri ($file_path)";
         my @stat = stat($file_path);
         my $mtime = @stat ? $stat[9] : -1;
-        # mtime + size, for Etags 
+        # mtime + size, for Etags
         $self->resource->add_dependency($file_path => { mtime => $mtime, size => $stat[7], });
         local $/ = undef;
         my $data = <$fh>;
@@ -286,7 +293,7 @@ sub transform {
     };
 
     return OK if $self->has_error;
-    
+
     my $new_body     = $style->output_as_bytes( $result );
     my $content_type = $style->media_type;
     my $encoding     = $style->output_encoding || "UTF-8";
