@@ -51,7 +51,7 @@ sub process {
     my $self = shift;
     my $xml_file = shift;
 
-    my $dom = XML::LibXML->load_xml( location => $xml_file );
+    my $dom = XML::LibXML->load_xml( location => $xml_file, xinclude => 1 );
     my $root = $dom->documentElement;
 
     if ( $root->exists('//accept_matrix')) {
