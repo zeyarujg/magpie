@@ -208,7 +208,7 @@ sub get_content {
 
 sub mtime {
     my $self = shift;
-    my $mtime = $self->resource->mtime;
+    my $mtime = $self->resource->can('mtime') ? $self->resource->mtime : time; 
     my $deps = $self->resource->dependencies;
     my $dmtime;
 
