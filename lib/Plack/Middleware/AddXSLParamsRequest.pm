@@ -21,7 +21,7 @@ sub call {
     }
     if ( grep { $_ eq 'Cookies' } @$allowed_groups ) {
         my $cookies = $req->cookies;
-        foreach my $cookie ( keys($cookies) ) {
+        foreach my $cookie ( keys(%$cookies) ) {
             $req->parameters->set('request.cookie.' . lc( $cookie ), $cookies->{$cookie});  
         }
     }
