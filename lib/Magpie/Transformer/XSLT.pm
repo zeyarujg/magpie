@@ -107,6 +107,9 @@ sub get_content {
     my $ctxt = shift;
     my $dom = undef;
 
+    my $resource = $self->resource;
+    return DECLINED if $resource->has_error;
+
     my $xml_parser = XML::LibXML->new(
         expand_xinclude   => 1,
         huge              => 1,
@@ -116,8 +119,7 @@ sub get_content {
         no_basefix        => 1
     );
 
-    my $docroot  = $self->document_root;
-    my $resource = $self->resource;
+    my $docroot  = $self->document_root;    
 
     # we only want to touch URIs that may need munging to
     # resolve to a document root.
