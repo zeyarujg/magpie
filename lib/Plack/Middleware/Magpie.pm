@@ -18,6 +18,8 @@ use Try::Tiny;
 use HTTP::Throwable::Factory;
 use Data::Printer;
 use File::stat;
+use Math::Random::Secure qw(irand);
+
 my @STACK      = ();
 my $MTOKEN     = undef;
 my $IDX = 0;
@@ -28,11 +30,13 @@ my $_add_frame = sub {
 };
 
 sub make_machine_token {
-    return '__MTOKEN__' . int( rand(100000) );
+    # return '__MTOKEN__' . int( rand(100000) );
+    return '__MTOKEN__' . irand();
 }
 
 sub make_match_token {
-    return '__MATCH__' . int( rand(100000) );
+    #return '__MATCH__' . int( rand(100000) );
+    return '__MATCH__' . irand();
 }
 
 sub machine (&) {
@@ -117,7 +121,7 @@ sub has_config_cache {
 sub call {
     my ( $self, $env ) = @_;
 
-    #warn Dumper( $env );
+    #warn p( $env );
     my $app = $self->app;
 
     my @resource_handlers = ();

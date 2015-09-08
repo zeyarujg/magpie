@@ -6,6 +6,7 @@ use XML::LibXML;
 use Magpie::Util;
 use Magpie::Plugin::URITemplate;
 use Class::Load;
+use Math::Random::Secure qw(rand irand);
 
 #use Data::Printer;
 
@@ -14,7 +15,8 @@ sub make_token {
 }
 
 sub make_match_token {
-    return '__MATCH__' . int( rand(100000) );
+    #return '__MATCH__' . int( rand(100000) );
+    return '__MATCH__' . irand();
 }
 
 has match_stack => (
