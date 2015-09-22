@@ -88,6 +88,12 @@ sub GET {
     return OK;
 }
 
+# simply calling GET here, 
+# enable 'Head' middleware to get rid of the body.   
+sub HEAD {
+    shift->GET(@_);
+}
+
 1;
 
 __END__
